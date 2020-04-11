@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Any book</title>
+
+    <script src="https://www.gstatic.com/firebasejs/7.13.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.13.2/firebase-analytics.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.13.2/firebase-firestore.js"></script>
+
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+		  apiKey: "AIzaSyCO63TaOBOXGKBOi5JgIPBwzKtuCN5xi7M",
+		  authDomain: "projekt-ps4.firebaseapp.com",
+		  databaseURL: "https://projekt-ps4.firebaseio.com",
+		  projectId: "projekt-ps4",
+		  storageBucket: "projekt-ps4.appspot.com",
+		  messagingSenderId: "68493235066",
+		  appId: "1:68493235066:web:15e37169fd0510e9d73cc3",
+		  measurementId: "G-SH8H1FTPXY"
+		};
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+</head>
+
+<body>
+    <form>
+        <div>
+            <label for="author">Autor: </label>
+            <input id="author" type="text" required />
+        </div>
+        <div>
+            <label for="title">Tytuł: </label>
+            <input id="title" type="text" required />
+        </div>
+        <div>
+            <label for="genre">Gatunek: </label>
+            <input id="type" type="text" required />
+        </div>
+        <div>
+            <label for="publishYear">Rok wydania: </label>
+            <input id="publishYear" type="text" required />
+        </div>
+        <div>
+            <label for="ISBN">ISBN: </label>
+            <input id="ISBN" type="text" required />
+        </div>
+        <div>
+            <input type="submit" value="Zapisz" />
+        </div>
+    </form>
+
+    <ul hidden>
+        <li class="book-info">Tytuł: <span class="author"></span></li>
+        <li class="book-info">Autor: <span class="title"></span></li>
+        <li class="book-info">Data publikacji: <span class="genre"></span></li>
+        <li class="book-info">Gatunek: <span class="publishYear"></span></li>
+        <li class="book-info">ISBN: <span class="ISBN"></span></li>
+    </ul>
+
+    <script>
+        const db = firebase.firestore();
+        const books = db.collection('books');
+		console.log(books);
+        const formInputs = document.querySelectorAll('input:not([type="submit"])');
+        const submitBtn = document.querySelector('input[type="submit"]');
+        const list = document.querySelector('ul');
+        const bookInfoList = document.querySelectorAll('.book-info');
+
+        function createDbEntry() {
+            return [...formInputs].reduce((entry, input) => ({
+                ...entry,
+                [input.id]: input.value
+            }), {});
+        }
+
+        function displayBookInfo(bookId) {
+            books.doc(bookId).get().then(book => {
+                if (book.exists) {
+                    list.hidden && list.removeAttribute('hidden');
+
+                    const bookInfo = book.data();
+                    bookInfoList.forEach(li => {
+                        const span = li.querySelector('span');
+                        span.textContent = bookInfo[span.className];
+                    });
+                }
+            }).catch(error => {
+                console.log("Error getting document:", error);
+            })
+        }
+
+        function submit(event) {
+            event.preventDefault();
+
+            books.add(createDbEntry()).then(ref => {
+                displayBookInfo(ref.id);
+                formInputs.forEach(input => input.value = '')
+
+                console.log("Document written with ID: ", docRef);
+            }).catch(error => {
+                console.error('Error adding document: ', error);
+            })
+        }
+
+        submitBtn.addEventListener('click', submit);
+    </script>
+</body>
+
+</html>
